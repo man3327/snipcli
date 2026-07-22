@@ -19,17 +19,10 @@ def get_db_path() -> Path:
     
     return db_path
 
-def get_db_connection() -> sqlite3.Connection:
+def init_db(conn: sqlite3.Connection) -> None:
     """
-    Returns a connection to the SQLite database.
-    Initializes the database schema if it doesn't exist.
+    Initializes the database schema by creating necessary tables and indexes.
     """
-    db_path = get_db_path()
-    
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row # Allows accessing columns by name (e.g., row['name'])
-
-    # Initialize the database schema if tables do not exist
     with conn: # This ensures transactions are handled automatically (commit on success, rollback on error)
         cursor = conn.cursor()
         
@@ -48,5 +41,18 @@ def get_db_connection() -> sqlite3.Connection:
         
         # Create an index on the 'name' column for faster lookups and uniqueness enforcement
         cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_snippet_name ON snippets (name)")
+
+def get_db_connection() -> sqlite3.Connection:
+    """
+    Returns a connection to the SQLite database.
+    Initializes the database schema if it doesn't exist.
+    """
+    db_path = get_db_path()
+    
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row # Allows accessing columns by name (e.g., row['name'])
+
+    # Initialize the database schema if tables do not exist
+    init_db(conn)
         
     return conn
