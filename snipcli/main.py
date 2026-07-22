@@ -51,6 +51,19 @@ def list_snippets():
     # For now, return the in-memory list
     return _snippets
 
+def search_snippets(keyword: str):
+    """
+    Searches for snippets where content or tags contain the given keyword (case-insensitive).
+    Returns a list of matching snippets.
+    """
+    keyword_lower = keyword.lower()
+    matching_snippets = []
+    for snippet in _snippets:
+        if keyword_lower in snippet['content'].lower() or \
+           keyword_lower in snippet['tags'].lower():
+            matching_snippets.append(snippet)
+    return matching_snippets
+
 @click.group()
 def cli():
     """
@@ -90,6 +103,24 @@ def list_command():
         click.echo(f"  Content:\n{indented_content}")
         click.echo("-" * 25) # Separator for readability
 
+@cli.command('search')
+@click.argument('keyword')
+def search_command(keyword):
+    """
+    Searches for snippets containing the specified KEYWORD in content or tags.
+    """
+    snippets = search_snippets(keyword)
+    if not snippets:
+        click.echo(f"No snippets found matching '{keyword}'.")
+        return
+
+    click.echo(f"--- Snippets matching '{keyword}' ---")
+    for snippet in snippets:
+        click.echo(f"ID: {snippet['id']}")
+        click.echo(f"  Tags: {snippet['tags'] if snippet['tags'] else 'None'}")
+        indented_content = "    " + snippet['content'].replace('\n', '\n    ')
+        click.echo(f"  Content:\n{indented_content}")
+        click.echo("-" * 25)
 
 if __name__ == '__main__':
     cli()
