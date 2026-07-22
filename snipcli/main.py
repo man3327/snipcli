@@ -1,4 +1,5 @@
 import click
+import pyperclip
 
 # Global list to simulate a database for now
 _snippets = []
@@ -64,6 +65,16 @@ def search_snippets(keyword: str):
             matching_snippets.append(snippet)
     return matching_snippets
 
+def get_snippet_by_id(snippet_id: int):
+    """
+    Retrieves a single snippet by its ID.
+    Returns the snippet dictionary if found, None otherwise.
+    """
+    for snippet in _snippets:
+        if snippet['id'] == snippet_id:
+            return snippet
+    return None
+
 @click.group()
 def cli():
     """
@@ -121,6 +132,22 @@ def search_command(keyword):
         indented_content = "    " + snippet['content'].replace('\n', '\n    ')
         click.echo(f"  Content:\n{indented_content}")
         click.echo("-" * 25)
+
+@cli.command('copy')
+@click.argument('id', type=int)
+def copy_command(id):
+    """
+    Copies the content of a snippet by its ID to the clipboard.
+    """
+    snippet = get_snippet_by_id(id)
+    if snippet:
+        try:
+            pyperclip.copy(snippet['content'])
+            click.echo(f"Snippet ID {id} content copied to clipboard.")
+        except pyperclip.PyperclipException as e:
+            click.echo(f"Error copying to clipboard: {e}. Please ensure you have a clipboard utility installed (e.g., xclip/xsel on Linux).", err=True)
+    else:
+        click.echo(f"No snippet found with ID: {id}", err=True)
 
 if __name__ == '__main__':
     cli()
