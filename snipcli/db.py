@@ -1,6 +1,7 @@
 import sqlite3
 from pathlib import Path
 import datetime
+from typing import Optional
 
 DB_FILE_NAME = "snipcli.db"
 APP_CONFIG_DIR_NAME = ".snipcli" # Typically a hidden directory in user's home
@@ -56,3 +57,31 @@ def get_db_connection() -> sqlite3.Connection:
     init_db(conn)
         
     return conn
+
+def add_snippet(name: str, content: str, language: Optional[str] = None, tags: Optional[str] = None) -> int:
+    """
+    Inserts a new code snippet into the database.
+
+    Args:
+        name (str): Unique name for the snippet.
+        content (str): The actual code snippet content.
+        language (Optional[str]): Programming language (e.g., 'python'). Defaults to None.
+        tags (Optional[str]): Comma-separated tags (e.g., 'web,frontend'). Defaults to None.
+
+    Returns:
+        int: The ID of the newly inserted snippet.
+    """
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        now = datetime.datetime.now().isoformat()
+        
+        cursor.execute("""
+            INSERT INTO snippets (name, content, language, tags, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (name, content, language, tags, now, now))
+        
+        conn.commit()
+        return cursor.lastrowid
+    finally:
+        conn.close()
