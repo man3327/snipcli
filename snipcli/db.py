@@ -101,3 +101,33 @@ def get_all_snippets() -> List[sqlite3.Row]:
         return snippets
     finally:
         conn.close()
+
+def search_snippets(keyword: str) -> List[sqlite3.Row]:
+    """
+    Searches for code snippets by matching keywords in their content or tags.
+    The search is case-insensitive.
+
+    Args:
+        keyword (str): The keyword to search for.
+
+    Returns:
+        List[sqlite3.Row]: A list of matching snippets, where each snippet is a sqlite3.Row object.
+    """
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        search_pattern = f"%{keyword}%"
+        
+        cursor.execute("""
+            SELECT id, name, content, language, tags, created_at, updated_at 
+            FROM snippets 
+            WHERE 
+                content LIKE ? COLLATE NOCASE OR 
+                tags LIKE ? COLLATE NOCASE
+            ORDER BY name
+        """, (search_pattern, search_pattern))
+        
+        snippets = cursor.fetchall()
+        return snippets
+    finally:
+        conn.close()
