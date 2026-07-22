@@ -1,7 +1,7 @@
 import sqlite3
 from pathlib import Path
 import datetime
-from typing import Optional
+from typing import Optional, List
 
 DB_FILE_NAME = "snipcli.db"
 APP_CONFIG_DIR_NAME = ".snipcli" # Typically a hidden directory in user's home
@@ -83,5 +83,21 @@ def add_snippet(name: str, content: str, language: Optional[str] = None, tags: O
         
         conn.commit()
         return cursor.lastrowid
+    finally:
+        conn.close()
+
+def get_all_snippets() -> List[sqlite3.Row]:
+    """
+    Retrieves all code snippets from the database.
+
+    Returns:
+        List[sqlite3.Row]: A list of all snippets, where each snippet is a sqlite3.Row object.
+    """
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name, content, language, tags, created_at, updated_at FROM snippets ORDER BY name")
+        snippets = cursor.fetchall()
+        return snippets
     finally:
         conn.close()
