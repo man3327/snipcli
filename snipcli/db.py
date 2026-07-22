@@ -86,6 +86,30 @@ def add_snippet(name: str, content: str, language: Optional[str] = None, tags: O
     finally:
         conn.close()
 
+def get_snippet_by_id(snippet_id: int) -> Optional[sqlite3.Row]:
+    """
+    Retrieves a single code snippet by its ID.
+
+    Args:
+        snippet_id (int): The ID of the snippet to retrieve.
+
+    Returns:
+        Optional[sqlite3.Row]: The snippet as a sqlite3.Row object if found, otherwise None.
+    """
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, name, content, language, tags, created_at, updated_at
+            FROM snippets
+            WHERE id = ?
+        """, (snippet_id,))
+        
+        snippet = cursor.fetchone()
+        return snippet
+    finally:
+        conn.close()
+
 def get_all_snippets() -> List[sqlite3.Row]:
     """
     Retrieves all code snippets from the database.
